@@ -1,5 +1,4 @@
 <?php
-
 declare(strict_types=1);
 
 namespace App\Http\Requests\Order;
@@ -16,17 +15,6 @@ final class CreateOrderRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'userId' => [
-                'required',
-                'integer',
-                'exists:users,id',
-            ],
-
-            'servicesPageId' => [
-                'required',
-                'integer',
-                'min:1',
-            ],
 
             'services' => [
                 'required',
@@ -52,16 +40,6 @@ final class CreateOrderRequest extends FormRequest
                 'services' => explode(',', $this->services),
             ]);
         }
-    }
-
-    public function getUserId(): int
-    {
-        return (int) $this->input('userId');
-    }
-
-    public function getPageId(): int
-    {
-        return (int) $this->input('servicesPageId');
     }
 
     /**

@@ -3,7 +3,7 @@
 namespace App\Services\OrderService;
 
 use App\Services\OrderService\DTO\Results\CalculationResult;
-use App\Services\ServiceCatalog\DTO\Objects\ServiceDto;
+use App\Services\CatalogOfServices\DTO\Data\ServiceDto;
 
 final class OrderCalculator
 {

@@ -4,21 +4,29 @@ namespace App\Services\OrderService;
 
 use App\Models\Order;
 use App\Services\OrderService\Contracts\OrderServiceInterface;
-use App\Services\OrderService\DTO\Objects\CreateOrderDto;
-use App\Services\OrderService\DTO\Objects\UpdateOrderServicesDto;
-use App\Services\OrderService\DTO\Objects\OrderDto;
+use App\Services\OrderService\DTO\Commands\CancelOrder;
+use App\Services\OrderService\DTO\Commands\CreateOrder;
+use App\Services\OrderService\DTO\Commands\DeleteOrder;
+use App\Services\OrderService\DTO\Commands\RegisterOrder;
+use App\Services\OrderService\DTO\Commands\StartProcessingOrder;
+use App\Services\OrderService\DTO\Commands\UpdateOrderServices;
+use App\Services\OrderService\DTO\Data\OrderDto;
 use App\Services\OrderService\Enums\OrderStatusEnum;
-use App\Services\OrderService\Exceptions\InvalidOrderStatusForUpdateException;
+use App\Services\OrderService\Exceptions\InvalidOrderStatusException;
+use App\Services\OrderService\Exceptions\InvalidOrderUserIdException;
 use App\Services\OrderService\Exceptions\OrderServicesNotFoundException;
-use App\Services\ServiceCatalog\DTO\Objects\ServiceDto;
+use App\Services\OrderService\Transports\OrderHttpClient;
+use App\Services\CatalogOfServices\DTO\Data\ServiceDto;
+use Ramsey\Uuid\UuidInterface;
 
 final readonly class OrderService implements OrderServiceInterface
 {
     public function __construct(
         private OrderCalculator $calculator,
+        private OrderHttpClient $client,
     ) {}
 
-    public function createOrder(CreateOrderDto $createOrderDto): OrderDto
+    public function createOrder(CreateOrder $createOrderDto): OrderDto
     {
         if (empty($createOrderDto->getExternalServices())) {
             throw new OrderServicesNotFoundException('Order must contain at least one service');
@@ -51,23 +59,15 @@ final readonly class OrderService implements OrderServiceInterface
         );
     }
 
-    public function updateOrderServices(UpdateOrderServicesDto $updateDto): OrderDto
+    public function updateOrderServices(UpdateOrderServices $updateDto): OrderDto
     {
         if (empty($updateDto->getExternalServices())) {
             throw new OrderServicesNotFoundException('Order must contain at least one service');
         }
 
-        $order = Order::query()
-            ->where('uuid', $updateDto->getUuid()->toString())
-            ->firstOrFail();
+        $order = $this->getOrderByUuid($updateDto->getUuid());
 
-        if ($order->user_id !== $updateDto->getUserId()) {
-            throw new InvalidOrderStatusForUpdateException('The user can only change their own orders');
-        }
-
-        if ($order->status !== OrderStatusEnum::DRAFT) {
-            throw new InvalidOrderStatusForUpdateException('Only draft orders can be modified');
-        }
+        $this->modifyChecks($order, $updateDto->getUserId());
 
         $calculation = $this->calculator->calculate($updateDto->getExternalServices());
 
@@ -82,7 +82,7 @@ final readonly class OrderService implements OrderServiceInterface
 
         return new OrderDto(
             uuid: $updateDto->getUuid(),
-            status: OrderStatusEnum::DRAFT,
+            status: $order->status,
             userId: $order->user_id,
             price: $calculation->getPrice(),
             tax: $calculation->getTax(),
@@ -91,6 +91,51 @@ final readonly class OrderService implements OrderServiceInterface
             updatedAt: $order->updated_at,
             createdAt: $order->created_at,
         );
+    }
+
+    public function deleteOrder(DeleteOrder $deleteOrderDto): void
+    {
+        $order = $this->getOrderByUuid($deleteOrderDto->getUuid());
+
+        $this->modifyChecks($order, $deleteOrderDto->getUserId());
+
+        $order->delete();
+    }
+
+    public function startProcessing(StartProcessingOrder $processingOrderDto): void
+    {
+        $order = $this->getOrderByUuid($processingOrderDto->getUuid());
+
+        $this->modifyChecks($order, $processingOrderDto->getUserId());
+
+        $externalUuid = $this->client->registerOrder(new RegisterOrder(
+            services: $order->external_services_uuids,
+            price: $order->price,
+            tax: $order->tax,
+            gross: $order->gross,
+        ));
+
+        $order->update([
+            'status' => OrderStatusEnum::IN_PROCESSING,
+            'external_uuid' => $externalUuid,
+        ]);
+    }
+
+    public function cancelOrder(CancelOrder $cancelOrderDto): void
+    {
+        $order = $this->getOrderByUuid($cancelOrderDto->getUuid());
+
+        if ($order->user_id !== $cancelOrderDto->getUserId()) {
+            throw new InvalidOrderUserIdException('The user can only cancel their own orders');
+        }
+
+        if ($order->status !== OrderStatusEnum::IN_PROCESSING) {
+            throw new InvalidOrderStatusException('Only in processing orders can be cancelled');
+        }
+
+        $order->update([
+            'status' => OrderStatusEnum::CANCELLED,
+        ]);
     }
 
     /**
@@ -102,5 +147,30 @@ final readonly class OrderService implements OrderServiceInterface
         return array_map(
             fn($service) => $service->getUuid(), $externalServices
         );
+    }
+
+    /**
+     * Проверки, может ли пользователь изменять заказ
+     *
+     * @param Order $order
+     * @param int $userId
+     * @return void
+     */
+    private function modifyChecks(Order $order, int $userId): void
+    {
+        if ($order->user_id !== $userId) {
+            throw new InvalidOrderUserIdException('The user can only change their own orders');
+        }
+
+        if ($order->status !== OrderStatusEnum::DRAFT) {
+            throw new InvalidOrderStatusException('Only draft orders can be modified');
+        }
+    }
+
+    private function getOrderByUuid(UuidInterface $uuid): Order
+    {
+        return Order::query()
+            ->where('uuid', $uuid->toString())
+            ->firstOrFail();
     }
 }

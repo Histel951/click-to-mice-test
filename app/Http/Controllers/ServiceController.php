@@ -2,19 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\Service\ServiceListRequest;
 use App\Http\Responses\ApiResponse;
-use App\Services\ServiceCatalog\Contracts\ServiceCatalogInterface;
+use App\Services\CatalogOfServices\Contracts\ServiceCatalogInterface;
 
 class ServiceController extends Controller
 {
-    public function index(ServiceListRequest $request, ServiceCatalogInterface $serviceCatalog): ApiResponse
+    public function index(ServiceCatalogInterface $serviceCatalog): ApiResponse
     {
-        $page = $request->getPage();
-        $resultDto = $serviceCatalog->getServices($page);
+        $resultDto = $serviceCatalog->getServices();
 
         return new ApiResponse(
-            data: $resultDto->getServices(),
+            data: $resultDto,
             message: 'Список услуг успешно получен'
         );
     }

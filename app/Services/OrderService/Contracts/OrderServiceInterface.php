@@ -2,10 +2,14 @@
 
 namespace App\Services\OrderService\Contracts;
 
-use App\Services\OrderService\DTO\Objects\CreateOrderDto;
-use App\Services\OrderService\DTO\Objects\UpdateOrderServicesDto;
-use App\Services\OrderService\DTO\Objects\OrderDto;
-use App\Services\OrderService\Exceptions\InvalidOrderStatusForUpdateException;
+use App\Services\OrderService\DTO\Commands\CancelOrder;
+use App\Services\OrderService\DTO\Commands\CreateOrder;
+use App\Services\OrderService\DTO\Commands\DeleteOrder;
+use App\Services\OrderService\DTO\Commands\StartProcessingOrder;
+use App\Services\OrderService\DTO\Commands\UpdateOrderServices;
+use App\Services\OrderService\DTO\Data\OrderDto;
+use App\Services\OrderService\Exceptions\InvalidOrderStatusException;
+use App\Services\OrderService\Exceptions\InvalidOrderUserIdException;
 use App\Services\OrderService\Exceptions\OrderServicesNotFoundException;
 
 interface OrderServiceInterface
@@ -13,19 +17,48 @@ interface OrderServiceInterface
     /**
      * Создание заказа
      *
-     * @param CreateOrderDto $createOrderDto
+     * @param CreateOrder $createOrderDto
      * @return OrderDto
      * @throws OrderServicesNotFoundException
      */
-    public function createOrder(CreateOrderDto $createOrderDto): OrderDto;
+    public function createOrder(CreateOrder $createOrderDto): OrderDto;
 
     /**
-     * Обновление заказа
+     * Обновление услуг заказа
      *
-     * @param UpdateOrderServicesDto $updateDto
+     * @param UpdateOrderServices $updateDto
      * @return OrderDto
      * @throws OrderServicesNotFoundException
-     * @throws InvalidOrderStatusForUpdateException
+     * @throws InvalidOrderUserIdException
+     * @throws InvalidOrderStatusException
      */
-    public function updateOrderServices(UpdateOrderServicesDto $updateDto): OrderDto;
+    public function updateOrderServices(UpdateOrderServices $updateDto): OrderDto;
+
+    /**
+     * Удалить заказ
+     *
+     * @param DeleteOrder $deleteOrderDto
+     * @return void
+     * @throws InvalidOrderUserIdException
+     * @throws InvalidOrderStatusException
+     */
+    public function deleteOrder(DeleteOrder $deleteOrderDto): void;
+
+    /**
+     * Регистрация заказа во внешнем сервисе
+     *
+     * @param StartProcessingOrder $processingOrderDto
+     * @return void
+     */
+    public function startProcessing(StartProcessingOrder $processingOrderDto): void;
+
+    /**
+     * Отменить заказ
+     *
+     * @param CancelOrder $cancelOrderDto
+     * @return void
+     * @throws InvalidOrderUserIdException
+     * @throws InvalidOrderStatusException
+     */
+    public function cancelOrder(CancelOrder $cancelOrderDto): void;
 }

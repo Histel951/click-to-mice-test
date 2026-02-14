@@ -31,6 +31,7 @@ class Order extends Model
         'tax',
         'gross',
         'external_services_uuids',
+        'external_uuid',
     ];
 
     protected $casts = [
@@ -41,6 +42,7 @@ class Order extends Model
         'gross' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'external_uuid' => 'string',
     ];
 
     public function user(): BelongsTo

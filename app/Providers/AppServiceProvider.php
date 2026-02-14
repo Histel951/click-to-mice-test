@@ -2,12 +2,14 @@
 
 namespace App\Providers;
 
+use App\Exceptions\Handler;
 use App\Services\OrderService\Contracts\OrderServiceInterface;
 use App\Services\OrderService\OrderService;
-use App\Services\ServiceCatalog\Contracts\ServiceCatalogInterface;
-use App\Services\ServiceCatalog\ServiceCatalogCached;
-use App\Services\ServiceCatalog\ServiceCatalogHttp;
-use App\Services\ServiceCatalog\Transports\ServiceCatalogHttpClient;
+use App\Services\OrderService\Transports\OrderHttpClient;
+use App\Services\CatalogOfServices\Contracts\ServiceCatalogInterface;
+use App\Services\CatalogOfServices\ServiceCatalogCached;
+use App\Services\CatalogOfServices\ServiceCatalogHttp;
+use App\Services\CatalogOfServices\Transports\ServiceCatalogHttpClient;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -25,12 +27,19 @@ class AppServiceProvider extends ServiceProvider
                 )
             );
 
-            return $service;
-
             return new ServiceCatalogCached($service);
         });
 
+        $this->app->singleton(OrderHttpClient::class, function () {
+            return new OrderHttpClient(
+                url: config('service_order.base_url'),
+                token: config('service_order.api_token')
+            );
+        });
+
         $this->app->bind(OrderServiceInterface::class, OrderService::class);
+
+        $this->app->singleton(\Illuminate\Foundation\Exceptions\Handler::class, Handler::class);
     }
 
     /**

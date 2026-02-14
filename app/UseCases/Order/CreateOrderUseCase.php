@@ -3,9 +3,9 @@
 namespace App\UseCases\Order;
 
 use App\Services\OrderService\Contracts\OrderServiceInterface;
-use App\Services\OrderService\DTO\Objects\CreateOrderDto;
-use App\Services\OrderService\DTO\Objects\OrderDto;
-use App\Services\ServiceCatalog\Contracts\ServiceCatalogInterface;
+use App\Services\OrderService\DTO\Commands\CreateOrder;
+use App\Services\OrderService\DTO\Data\OrderDto;
+use App\Services\CatalogOfServices\Contracts\ServiceCatalogInterface;
 use Ramsey\Uuid\Uuid;
 
 final readonly class CreateOrderUseCase
@@ -15,17 +15,16 @@ final readonly class CreateOrderUseCase
         private ServiceCatalogInterface $serviceCatalog
     ) {}
 
-    public function execute(int $pageId, int $userId, array $services): OrderDto
+    public function execute(int $userId, array $services): OrderDto
     {
         $servicesResult = $this->serviceCatalog->getServicesByUuids(
-            $services,
-            $pageId
+            $services
         );
 
-        $createOrderDto = new CreateOrderDto(
+        $createOrderDto = new CreateOrder(
             uuid: Uuid::uuid4(),
             userId: $userId,
-            services: $servicesResult->getServices(),
+            services: $servicesResult,
         );
 
         return $this->orderService->createOrder($createOrderDto);
