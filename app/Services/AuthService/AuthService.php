@@ -3,7 +3,7 @@
 namespace App\Services\AuthService;
 
 use App\Models\User;
-use App\Services\AuthService\DTO\Data\LoginDto;
+use App\Services\AuthService\DTO\Commands\LoginDto;
 use App\Services\AuthService\DTO\Results\LoginResultDto;
 use App\Services\AuthService\Exceptions\InvalidCredentialsException;
 use Illuminate\Support\Facades\Hash;

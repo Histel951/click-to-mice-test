@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\AuthService\DTO\Data;
+namespace App\Services\AuthService\DTO\Commands;
 
 final readonly class LoginDto
 {

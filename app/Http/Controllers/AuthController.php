@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Responses\ApiResponse;
 use App\Services\AuthService\AuthService;
-use App\Services\AuthService\DTO\Data\LoginDto;
+use App\Services\AuthService\DTO\Commands\LoginDto;
 use Illuminate\Http\Request;
 
 class AuthController extends Controller

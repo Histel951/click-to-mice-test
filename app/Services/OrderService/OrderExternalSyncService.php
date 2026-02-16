@@ -24,23 +24,31 @@ final readonly class OrderExternalSyncService
         Order::whereNotNull('external_uuid')
             ->where('status', OrderStatusEnum::IN_PROCESSING->value)
             ->chunkById(100, function ($orders) {
-                // chunk поскольку есть внешний http вызов, он лёгкий, поэтому проблем быть не должно
-                // Но при высоких нагрузках, лучше избегать таких http запросов в циклах
-                // chunk это как самый быстрый в реализации и простой вариант
+
+                $doneUuids = [];
+
                 foreach ($orders as $order) {
                     try {
                         $externalStatus = $this->client
                             ->getExternalOrderStatus($order->external_uuid);
 
                         if ($externalStatus === OrderExternalStatusEnum::DONE) {
-                            $order->update([
-                                'status' => OrderStatusEnum::DONE->value,
-                            ]);
+                            $doneUuids[] = $order->uuid;
                         }
+
                     } catch (\Throwable $exception) {
                         report($exception);
                     }
                 }
+
+                if (!empty($doneUuids)) {
+                    // обновляю записи 1 запросом
+                    Order::whereIn('uuid', $doneUuids)
+                        ->update([
+                            'status' => OrderStatusEnum::DONE->value,
+                        ]);
+                }
             }, 'uuid');
     }
+
 }
