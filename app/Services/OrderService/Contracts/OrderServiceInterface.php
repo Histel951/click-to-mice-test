@@ -2,15 +2,13 @@
 
 namespace App\Services\OrderService\Contracts;
 
-use App\Services\OrderService\DTO\Commands\CancelOrder;
 use App\Services\OrderService\DTO\Commands\CreateOrder;
-use App\Services\OrderService\DTO\Commands\DeleteOrder;
-use App\Services\OrderService\DTO\Commands\StartProcessingOrder;
 use App\Services\OrderService\DTO\Commands\UpdateOrderServices;
 use App\Services\OrderService\DTO\Data\OrderDto;
 use App\Services\OrderService\Exceptions\InvalidOrderStatusException;
 use App\Services\OrderService\Exceptions\InvalidOrderUserIdException;
 use App\Services\OrderService\Exceptions\OrderServicesNotFoundException;
+use Ramsey\Uuid\UuidInterface;
 
 interface OrderServiceInterface
 {
@@ -37,28 +35,31 @@ interface OrderServiceInterface
     /**
      * Удалить заказ
      *
-     * @param DeleteOrder $deleteOrderDto
+     * @param UuidInterface $uuid
+     * @param int $userId
      * @return void
      * @throws InvalidOrderUserIdException
      * @throws InvalidOrderStatusException
      */
-    public function deleteOrder(DeleteOrder $deleteOrderDto): void;
+    public function deleteOrder(UuidInterface $uuid, int $userId): void;
 
     /**
      * Регистрация заказа во внешнем сервисе
      *
-     * @param StartProcessingOrder $processingOrderDto
+     * @param UuidInterface $uuid
+     * @param int $userId
      * @return void
      */
-    public function startProcessing(StartProcessingOrder $processingOrderDto): void;
+    public function startProcessing(UuidInterface $uuid, int $userId): void;
 
     /**
      * Отменить заказ
      *
-     * @param CancelOrder $cancelOrderDto
+     * @param UuidInterface $uuid
+     * @param int $userId
      * @return void
      * @throws InvalidOrderUserIdException
      * @throws InvalidOrderStatusException
      */
-    public function cancelOrder(CancelOrder $cancelOrderDto): void;
+    public function cancelOrder(UuidInterface $uuid, int $userId): void;
 }

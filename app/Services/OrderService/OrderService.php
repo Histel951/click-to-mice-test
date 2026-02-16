@@ -4,11 +4,8 @@ namespace App\Services\OrderService;
 
 use App\Models\Order;
 use App\Services\OrderService\Contracts\OrderServiceInterface;
-use App\Services\OrderService\DTO\Commands\CancelOrder;
 use App\Services\OrderService\DTO\Commands\CreateOrder;
-use App\Services\OrderService\DTO\Commands\DeleteOrder;
 use App\Services\OrderService\DTO\Commands\RegisterOrder;
-use App\Services\OrderService\DTO\Commands\StartProcessingOrder;
 use App\Services\OrderService\DTO\Commands\UpdateOrderServices;
 use App\Services\OrderService\DTO\Data\OrderDto;
 use App\Services\OrderService\Enums\OrderStatusEnum;
@@ -93,20 +90,20 @@ final readonly class OrderService implements OrderServiceInterface
         );
     }
 
-    public function deleteOrder(DeleteOrder $deleteOrderDto): void
+    public function deleteOrder(UuidInterface $uuid, int $userId): void
     {
-        $order = $this->getOrderByUuid($deleteOrderDto->getUuid());
+        $order = $this->getOrderByUuid($uuid);
 
-        $this->modifyChecks($order, $deleteOrderDto->getUserId());
+        $this->modifyChecks($order, $userId);
 
         $order->delete();
     }
 
-    public function startProcessing(StartProcessingOrder $processingOrderDto): void
+    public function startProcessing(UuidInterface $uuid, int $userId): void
     {
-        $order = $this->getOrderByUuid($processingOrderDto->getUuid());
+        $order = $this->getOrderByUuid($uuid);
 
-        $this->modifyChecks($order, $processingOrderDto->getUserId());
+        $this->modifyChecks($order, $userId);
 
         $externalUuid = $this->client->registerOrder(new RegisterOrder(
             services: $order->external_services_uuids,
@@ -121,11 +118,11 @@ final readonly class OrderService implements OrderServiceInterface
         ]);
     }
 
-    public function cancelOrder(CancelOrder $cancelOrderDto): void
+    public function cancelOrder(UuidInterface $uuid, int $userId): void
     {
-        $order = $this->getOrderByUuid($cancelOrderDto->getUuid());
+        $order = $this->getOrderByUuid($uuid);
 
-        if ($order->user_id !== $cancelOrderDto->getUserId()) {
+        if ($order->user_id !== $userId) {
             throw new InvalidOrderUserIdException('The user can only cancel their own orders');
         }
 

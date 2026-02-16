@@ -10,9 +10,6 @@ use App\Http\Requests\Order\UpdateServicesOrderRequest;
 use App\Http\Responses\ApiResponse;
 use App\Models\Order;
 use App\Services\OrderService\Contracts\OrderServiceInterface;
-use App\Services\OrderService\DTO\Commands\CancelOrder;
-use App\Services\OrderService\DTO\Commands\DeleteOrder;
-use App\Services\OrderService\DTO\Commands\StartProcessingOrder;
 use App\UseCases\Order\CreateOrderUseCase;
 use App\UseCases\Order\UpdateOrderUseCase;
 use Illuminate\Http\Request;
@@ -77,10 +74,10 @@ class OrderController extends Controller
         OrderServiceInterface       $orderService
     ): ApiResponse
     {
-        $orderService->startProcessing(new StartProcessingOrder(
-            uuid: Uuid::fromString($uuid),
-            userId: $request->user()->getKey(),
-        ));
+        $orderService->startProcessing(
+            Uuid::fromString($uuid),
+            $request->user()->getKey()
+        );
 
         return new ApiResponse(
             data: [
@@ -96,10 +93,10 @@ class OrderController extends Controller
         OrderServiceInterface $orderService
     ): ApiResponse
     {
-        $orderService->deleteOrder(new DeleteOrder(
-            uuid: Uuid::fromString($uuid),
-            userId: $request->user()->getKey(),
-        ));
+        $orderService->deleteOrder(
+            Uuid::fromString($uuid),
+            $request->user()->getKey()
+        );
 
         return new ApiResponse(
             data: [
@@ -115,10 +112,10 @@ class OrderController extends Controller
         OrderServiceInterface $orderService
     ): ApiResponse
     {
-        $orderService->cancelOrder(new CancelOrder(
-            uuid: Uuid::fromString($uuid),
-            userId: $request->user()->getKey(),
-        ));
+        $orderService->cancelOrder(
+            Uuid::fromString($uuid),
+            $request->user()->getKey()
+        );
 
         return new ApiResponse(
             data: [
