@@ -5,17 +5,16 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Responses\ApiResponse;
 use App\Services\AuthService\AuthService;
-use App\Services\AuthService\DTO\Commands\LoginDto;
 use Illuminate\Http\Request;
 
 class AuthController extends Controller
 {
     public function login(LoginRequest $request, AuthService $authService): ApiResponse
     {
-        $result = $authService->login(new LoginDto(
-            email: $request->getEmail(),
-            password: $request->getPassword()
-        ));
+        $result = $authService->login(
+            $request->getEmail(),
+            $request->getPassword()
+        );
 
         return new ApiResponse($result, 'Вы авторизовались');
     }

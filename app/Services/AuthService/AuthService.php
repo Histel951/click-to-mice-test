@@ -3,7 +3,6 @@
 namespace App\Services\AuthService;
 
 use App\Models\User;
-use App\Services\AuthService\DTO\Commands\LoginDto;
 use App\Services\AuthService\DTO\Results\LoginResultDto;
 use App\Services\AuthService\Exceptions\InvalidCredentialsException;
 use Illuminate\Support\Facades\Hash;
@@ -13,14 +12,15 @@ final class AuthService
     /**
      * Авторизирует пользователя и возвращает токен
      *
-     * @param LoginDto $loginDto
+     * @param string $email
+     * @param string $password
      * @return LoginResultDto
      */
-    public function login(LoginDto $loginDto): LoginResultDto
+    public function login(string $email, string $password): LoginResultDto
     {
-        $user = User::where('email', $loginDto->getEmail())->first();
+        $user = User::where('email', $email)->first();
 
-        if (!$user || !Hash::check($loginDto->getPassword(), $user->password)) {
+        if (!$user || !Hash::check($password, $user->password)) {
             throw new InvalidCredentialsException("Invalid credentials");
         }
 
