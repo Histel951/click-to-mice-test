@@ -24,7 +24,6 @@ final readonly class OrderExternalSyncService
         Order::whereNotNull('external_uuid')
             ->where('status', OrderStatusEnum::IN_PROCESSING->value)
             ->chunkById(100, function ($orders) {
-
                 $doneUuids = [];
 
                 foreach ($orders as $order) {
